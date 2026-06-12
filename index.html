@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>typer. - minimal typing practice</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ----------------------------------------------------
+       CSS VARIABLE SYSTEM & THEMES
+       ---------------------------------------------------- */
+    :root {
+      --bg-color: #0f0f10;
+      --surface-color: #1a1a1f;
+      --border-color: #2a2a35;
+      --text-primary: #e8e6f0;
+      --text-muted: #5a5870;
+      --accent-correct: #57c47a; /* soft green */
+      --accent-incorrect: #e05c5c; /* soft red */
+      --accent-highlight: #a78bfa; /* purple */
+      --accent-stat: #7dd3fc; /* sky blue */
+      --font-ui: 'Inter', sans-serif;
+      --font-typing: 'JetBrains Mono', monospace;
+      --transition-speed: 150ms;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    body.light {
+      --bg-color: #f4f4f5;
+      --surface-color: #ffffff;
+      --border-color: #e4e4e7;
+      --text-primary: #18181b;
+      --text-muted: #a1a1aa;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ----------------------------------------------------
+       BASE STYLES & RESET
+       ---------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ----------------------------------------------------
+       LAYOUT CONTAINER
+       ---------------------------------------------------- */
+    .app-container {
+      width: 100%;
+      max-width: 860px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      position: relative;
+    }
+
+    /* ----------------------------------------------------
+       TOP BAR
+       ---------------------------------------------------- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .logo span.dot {
+      color: var(--accent-highlight);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Caps Lock Badge */
+    .caps-lock-badge {
+      background-color: rgba(224, 92, 92, 0.15);
+      color: var(--accent-incorrect);
+      border: 1px solid rgba(224, 92, 92, 0.3);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: opacity 200ms ease, transform 200ms ease;
+      pointer-events: none;
+    }
+
+    .caps-lock-badge.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 8px;
+      transition: color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    body.light .theme-toggle:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* ----------------------------------------------------
+       TABS AND CONFIGURATION
+       ---------------------------------------------------- */
+    .menu-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: opacity var(--transition-speed) ease;
+    }
+
+    .tabs-wrapper {
+      display: flex;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      border-radius: 12px;
+      width: fit-content;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      background-color: var(--border-color);
+    }
+
+    .config-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 24px;
+      font-size: 0.9rem;
+    }
+
+    .pill-group {
+      display: flex;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .pill-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+    }
+
+    .pill-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .pill-btn.active {
+      color: var(--text-primary);
+      background-color: var(--border-color);
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .toggle-btn {
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
+      transition: color var(--transition-speed) ease, border-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+    }
+
+    .toggle-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .toggle-btn.active {
+      color: var(--accent-highlight);
+      border-color: var(--accent-highlight);
+      background-color: rgba(167, 139, 250, 0.05);
+    }
+
+    /* ----------------------------------------------------
+       LIVE STATS BAR
+       ---------------------------------------------------- */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .stat-chip {
+      flex: 1;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-chip .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .stat-chip .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: var(--font-ui);
+      color: var(--accent-stat);
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+
+    .stat-chip .value span.unit {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ----------------------------------------------------
+       TYPING CONTAINER & BLUR SYSTEM
+       ---------------------------------------------------- */
+    .typing-box-wrapper {
+      position: relative;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      transition: border-color var(--transition-speed) ease;
+    }
+
+    .typing-box-wrapper.focused {
+      border-color: rgba(167, 139, 250, 0.5);
+    }
+
+    /* Click-to-Focus Overlay */
+    .focus-overlay {
+      position: absolute;
+      inset: 0;
+      background-color: rgba(15, 15, 16, 0.85);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+      cursor: pointer;
+      transition: opacity 300ms ease, visibility 300ms;
+      backdrop-filter: blur(4px);
+    }
+
+    body.light .focus-overlay {
+      background-color: rgba(244, 244, 245, 0.85);
+    }
+
+    .focus-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .focus-overlay svg {
+      width: 36px;
+      height: 36px;
+      color: var(--accent-highlight);
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    .focus-overlay span {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    /* Word Display Area */
+    .word-display-container {
+      position: relative;
+      height: 145px; /* Fits roughly 3 lines perfectly */
+      overflow: hidden;
+      font-family: var(--font-typing);
+      font-size: 1.5rem;
+      line-height: 2.2;
+      letter-spacing: 0.03em;
+      user-select: none;
+      scroll-behavior: smooth;
+    }
+
+    .words-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 0 16px; /* row-gap is 0, margin/padding is handled by words */
+      position: relative;
+    }
+
+    .word {
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: border-bottom-color 150ms ease, color 150ms ease;
+      position: relative;
+      white-space: nowrap;
+      scroll-margin: 50px;
+    }
+
+    .word.correct {
+      color: var(--accent-correct);
+    }
+
+    .word.incorrect {
+      border-bottom: 2px dashed var(--accent-incorrect);
+      color: var(--accent-incorrect);
+    }
+
+    /* Word shake animation on incorrect character */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    .word.shaking {
+      animation: shake 80ms ease-in-out;
+    }
+
+    .char {
+      position: relative;
+      color: var(--text-muted);
+      transition: color 80ms ease;
+    }
+
+    .char.correct {
+      color: var(--text-primary);
+    }
+
+    .char.incorrect {
+      color: var(--accent-incorrect);
+    }
+
+    .char.overshoot {
+      color: #b91c1c; /* darker red for extra characters */
+      text-decoration: underline;
+    }
+
+    /* The Blinking Caret */
+    .caret {
+      position: absolute;
+      width: 2.5px;
+      height: 1.8rem;
+      background-color: var(--accent-highlight);
+      border-radius: 2px;
+      transition: left 70ms ease, top 70ms ease;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 0 8px var(--accent-highlight);
+      top: 0;
+      left: 0;
+    }
+
+    .caret.blinking {
+      animation: caret-blink 1s step-end infinite;
+    }
+
+    @keyframes caret-blink {
+      from, to { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    /* Hidden input */
+    #hidden-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      z-index: -100;
+    }
+
+    /* ----------------------------------------------------
+       FOOTER / SHORTCUT HINTS
+       ---------------------------------------------------- */
+    footer {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      user-select: none;
+    }
+
+    footer kbd {
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: var(--text-primary);
+      font-family: var(--font-typing);
+      font-size: 0.75rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ----------------------------------------------------
+       COUNTDOWN OVERLAY SCREEN
+       ---------------------------------------------------- */
+    .countdown-screen {
+      position: absolute;
+      inset: 0;
+      background-color: var(--bg-color);
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 200ms ease, visibility 200ms ease;
+    }
+
+    .countdown-screen.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .countdown-number {
+      font-size: 5rem;
+      font-weight: 800;
+      color: var(--accent-highlight);
+      transform: scale(0.5);
+      opacity: 0;
+    }
+
+    @keyframes count-pop {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    .count-anim {
+      animation: count-pop 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* ----------------------------------------------------
+       RESULTS OVERLAY SCREEN
+       ---------------------------------------------------- */
+    .results-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 15, 16, 0.7);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 300ms ease, visibility 300ms ease;
+    }
+
+    body.light .results-overlay {
+      background-color: rgba(244, 244, 245, 0.7);
+    }
+
+    .results-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .results-card {
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 860px;
+      padding: 40px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+      transform: translateY(100%);
+      transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    body.light .results-card {
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .results-overlay.active .results-card {
+      transform: translateY(0);
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .results-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Results stats layout */
+    .results-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .results-stat-card {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.light .results-stat-card {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .results-stat-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .results-stat-card .value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .results-stat-card .value.highlight {
+      color: var(--accent-highlight);
+    }
+
+    .results-stat-card .sub-value {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Sparkline Chart Container */
+    .chart-container {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    body.light .chart-container {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .chart-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    #sparkline-canvas {
+      width: 100%;
+      height: 100px;
+      display: block;
+    }
+
+    /* Results actions */
+    .results-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+    }
+
+    .btn {
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-highlight);
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #906ffa;
+    }
+
+    .btn-secondary {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    body.light .btn-secondary:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    /* ----------------------------------------------------
+       RESPONSIVE ADJUSTMENTS
+       ---------------------------------------------------- */
+    @media (max-width: 768px) {
+      .results-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .config-row {
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        font-size: 1.5rem;
+      }
+      .results-stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-bar {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .results-card {
+        padding: 24px;
+      }
+      .word-display-container {
+        font-size: 1.25rem;
+        line-height: 2.0;
+        height: 125px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- TOP BAR -->
+    <header>
+      <div class="logo">typer<span class="dot">.</span></div>
+      
+      <div class="header-actions">
+        <!-- Caps Lock Badge -->
+        <div id="caps-lock" class="caps-lock-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          CAPS LOCK
+        </div>
+        
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24">
+            <!-- Moon Icon (Default: show in Dark mode to switch to Light) -->
+            <path id="theme-icon-moon" d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z" />
+            <!-- Sun Icon (Hidden initially) -->
+            <path id="theme-icon-sun" style="display:none;" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 16a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1zM5.636 4.222a1 1 0 0 1 1.414 0l.707.707a1 1 0 1 1-1.414 1.414l-.707-.707a1 1 0 0 1 0-1.414zm11.314 11.314a1 1 0 0 1 1.414 0l.707.707a1 1 0 1 1-1.414 1.414l-.707-.707a1 1 0 0 1 0-1.414zM2 12a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1zm16 0a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1zM5.636 19.778a1 1 0 0 1 0-1.414l.707-.707a1 1 0 1 1 1.414 1.414l-.707.707a1 1 0 0 1-1.414 0zm11.314-11.314a1 1 0 0 1 0-1.414l.707-.707a1 1 0 1 1 1.414 1.414l-.707.707a1 1 0 0 1-1.414 0z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MENU & CONFIG -->
+    <div id="menu-section" class="menu-section">
+      <!-- Mode Tabs -->
+      <div class="tabs-wrapper">
+        <button class="tab-btn active" data-mode="time">Time Trial</button>
+        <button class="tab-btn" data-mode="word">Word Count</button>
+        <button class="tab-btn" data-mode="zen">Zen Mode</button>
+      </div>
+
+      <!-- Config Pills & Toggles -->
+      <div class="config-row">
+        <!-- Time Trial limits -->
+        <div id="time-configs" class="pill-group">
+          <button class="pill-btn" data-val="15">15s</button>
+          <button class="pill-btn active" data-val="30">30s</button>
+          <button class="pill-btn" data-val="60">60s</button>
+          <button class="pill-btn" data-val="120">120s</button>
+        </div>
+
+        <!-- Word Count limits -->
+        <div id="word-configs" class="pill-group" style="display: none;">
+          <button class="pill-btn" data-val="10">10</button>
+          <button class="pill-btn active" data-val="25">25</button>
+          <button class="pill-btn" data-val="50">50</button>
+          <button class="pill-btn" data-val="100">100</button>
+        </div>
+
+        <!-- Toggles -->
+        <div class="toggle-group">
+          <button id="toggle-punctuation" class="toggle-btn">
+            <span>punctuation</span>
+          </button>
+          <button id="toggle-numbers" class="toggle-btn">
+            <span>numbers</span>
+          </button>
+          <button id="toggle-countdown" class="toggle-btn">
+            <span>countdown</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE STATS BAR -->
+    <div id="live-stats" class="stats-bar">
+      <!-- WPM -->
+      <div class="stat-chip">
+        <span class="label">wpm</span>
+        <span class="value" id="live-wpm">0</span>
+      </div>
+      <!-- Accuracy -->
+      <div class="stat-chip">
+        <span class="label">accuracy</span>
+        <span class="value" id="live-accuracy">100<span class="unit">%</span></span>
+      </div>
+      <!-- Streak -->
+      <div class="stat-chip">
+        <span class="label">streak</span>
+        <span class="value" id="live-streak">0</span>
+      </div>
+      <!-- Time / Progress -->
+      <div class="stat-chip">
+        <span class="label" id="progress-label">time</span>
+        <span class="value" id="live-progress">30s</span>
+      </div>
+    </div>
+
+    <!-- TYPING BOX WRAPPER -->
+    <div id="typing-box-wrapper" class="typing-box-wrapper">
+      
+      <!-- Click to Focus Blur Overlay -->
+      <div id="focus-overlay" class="focus-overlay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+        </svg>
+        <span>Click here or press any key to focus</span>
+      </div>
+
+      <!-- Countdown overlay screen -->
+      <div id="countdown-screen" class="countdown-screen">
+        <div id="countdown-number" class="countdown-number">3</div>
+      </div>
+
+      <!-- Main Word Display Area -->
+      <div id="word-display-container" class="word-display-container">
+        <div id="caret" class="caret blinking"></div>
+        <div id="words-inner" class="words-inner">
+          <!-- Spans populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Hidden Input for Capturing Typing -->
+      <input type="text" id="hidden-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+
+    <!-- SHORTCUT HINTS -->
+    <footer>
+      <span>Press <kbd>Tab</kbd> to restart</span>
+      <span>Press <kbd>Esc</kbd> for menu</span>
+    </footer>
+
+  </div>
+
+  <!-- RESULTS OVERLAY SCREEN -->
+  <div id="results-overlay" class="results-overlay">
+    <div class="results-card">
+      <div class="results-header">
+        <h2 class="results-title">test results</h2>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="results-stats-grid">
+        <div class="results-stat-card">
+          <span class="label">wpm</span>
+          <span class="value highlight" id="res-wpm">0</span>
+          <span class="sub-value" id="res-raw-wpm">raw: 0 wpm</span>
+        </div>
+        <div class="results-stat-card">
+          <span class="label">accuracy</span>
+          <span class="value" id="res-accuracy">0%</span>
+          <span class="sub-value" id="res-chars">0 correct | 0 incorrect | 0 total</span>
+        </div>
+        <div class="results-stat-card">
+          <span class="label">consistency</span>
+          <span class="value" id="res-consistency">0%</span>
+          <span class="sub-value" id="res-streak">best streak: 0</span>
+        </div>
+      </div>
+
+      <!-- Sparkline Chart -->
+      <div class="chart-container">
+        <span class="chart-label">wpm history sparkline</span>
+        <canvas id="sparkline-canvas"></canvas>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="results-actions">
+        <button id="res-menu-btn" class="btn btn-secondary">
+          <span>Go to Menu</span> <kbd>Esc</kbd>
+        </button>
+        <button id="res-retry-btn" class="btn btn-primary">
+          <span>Retry Same Config</span> <kbd>Enter</kbd>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------
+       JAVASCRIPT APP CODE
+       ---------------------------------------------------- -->
+  <script>
+    // ----------------------------------------------------
+    // 1. WORD LIST ARRAY (200 words)
+    // ----------------------------------------------------
+    const WORD_LIST = [
+      "the", "be", "to", "of", "and", "a", "in", "that", "have", "i",
+      "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+      "this", "but", "his", "by", "from", "they", "we", "say", "her", "she",
+      "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
+      "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+      "when", "make", "can", "like", "time", "no", "just", "him", "know", "take",
+      "people", "into", "year", "your", "good", "some", "could", "them", "see", "other",
+      "than", "then", "now", "look", "only", "come", "its", "over", "think", "also",
+      "back", "after", "use", "two", "how", "our", "work", "first", "well", "way",
+      "even", "new", "want", "because", "any", "these", "give", "day", "most", "us",
+      "here", "such", "ask", "company", "every", "find", "interest", "line", "must",
+      "never", "own", "point", "present", "general", "govern", "part", "problem", "program", "public",
+      "school", "still", "system", "tell", "under", "write", "life", "world", "hand", "child",
+      "eye", "woman", "place", "week", "case", "government", "number", "group", "fact", "seem",
+      "feel", "try", "leave", "call", "last", "long", "great", "little", "old", "right",
+      "big", "high", "different", "small", "large", "next", "early", "young", "important", "few",
+      "bad", "same", "able", "own", "point", "home", "water", "room", "mother", "area",
+      "money", "story", "fact", "month", "lot", "right", "study", "book", "eye", "job",
+      "word", "business", "issue", "side", "kind", "head", "house", "service", "friend", "father",
+      "power", "hour", "game", "line", "end", "member", "law", "car", "city", "community",
+      "name", "president", "team", "minute", "idea", "kid", "body", "information", "back", "parent"
+    ];
+
+    // ----------------------------------------------------
+    // 2. STATE OBJECT
+    // ----------------------------------------------------
+    const STATE = {
+      // Game Configurations
+      activeMode: 'time', // 'time', 'word', 'zen'
+      timeLimit: 30, // seconds
+      wordLimit: 25, // count of words
+      punctuationMode: false,
+      numbersMode: false,
+      countdownEnabled: false,
+
+      // Game States
+      isTestRunning: false,
+      isCountdownActive: false,
+      isFinished: false,
+      startTime: null,
+      elapsedSeconds: 0,
+      timerIntervalId: null,
+
+      // Word tracking arrays
+      words: [], // list of generated words for the current run
+      currentWordIndex: 0,
+      
+      // Stat tracking (as defined in specs)
+      wpmHistory: [], // sampled WPM per second
+      totalChars: 0,
+      correctChars: 0,
+      incorrectChars: 0,
+      wordsCorrect: 0,
+      wordsIncorrect: 0,
+      currentStreak: 0,
+      bestStreak: 0,
+
+      // Used word pool to prevent duplicates
+      unusedWordPool: [],
+
+      // Track previous input value for key character delta calculations
+      prevInputVal: ''
+    };
+
+    // ----------------------------------------------------
+    // 3. CONFIG / SETTINGS (Persistence & Setup)
+    // ----------------------------------------------------
+    const CONFIG = {
+      theme: 'dark' // 'dark', 'light'
+    };
+
+    // ----------------------------------------------------
+    // 4. DOM REFERENCES
+    // ----------------------------------------------------
+    let DOM = {};
+
+    function cacheDOM() {
+      DOM = {
+        body: document.body,
+        themeToggle: document.getElementById('theme-toggle'),
+        themeIconMoon: document.getElementById('theme-icon-moon'),
+        themeIconSun: document.getElementById('theme-icon-sun'),
+        menuSection: document.getElementById('menu-section'),
+        tabBtns: document.querySelectorAll('.tab-btn'),
+        timeConfigs: document.getElementById('time-configs'),
+        wordConfigs: document.getElementById('word-configs'),
+        pillBtns: document.querySelectorAll('.pill-btn'),
+        togglePunctuation: document.getElementById('toggle-punctuation'),
+        toggleNumbers: document.getElementById('toggle-numbers'),
+        toggleCountdown: document.getElementById('toggle-countdown'),
+        liveStats: document.getElementById('live-stats'),
+        liveWpm: document.getElementById('live-wpm'),
+        liveAccuracy: document.getElementById('live-accuracy'),
+        liveStreak: document.getElementById('live-streak'),
+        progressLabel: document.getElementById('progress-label'),
+        liveProgress: document.getElementById('live-progress'),
+        typingBoxWrapper: document.getElementById('typing-box-wrapper'),
+        focusOverlay: document.getElementById('focus-overlay'),
+        countdownScreen: document.getElementById('countdown-screen'),
+        countdownNumber: document.getElementById('countdown-number'),
+        wordDisplayContainer: document.getElementById('word-display-container'),
+        wordsInner: document.getElementById('words-inner'),
+        caret: document.getElementById('caret'),
+        hiddenInput: document.getElementById('hidden-input'),
+        resultsOverlay: document.getElementById('results-overlay'),
+        resWpm: document.getElementById('res-wpm'),
+        resRawWpm: document.getElementById('res-raw-wpm'),
+        resAccuracy: document.getElementById('res-accuracy'),
+        resChars: document.getElementById('res-chars'),
+        resConsistency: document.getElementById('res-consistency'),
+        resStreak: document.getElementById('res-streak'),
+        sparklineCanvas: document.getElementById('sparkline-canvas'),
+        resMenuBtn: document.getElementById('res-menu-btn'),
+        resRetryBtn: document.getElementById('res-retry-btn'),
+        capsLockBadge: document.getElementById('caps-lock')
+      };
+    }
+
+    // ----------------------------------------------------
+    // 5. GAME LOGIC FUNCTIONS
+    // ----------------------------------------------------
+    
+    // Shuffle helper (Fisher-Yates)
+    function shuffleArray(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // Populate unused words pool
+    function refreshWordPool() {
+      STATE.unusedWordPool = shuffleArray(WORD_LIST);
+    }
+
+    // Grab a word from the pool, refilling if empty
+    function getNextWordFromPool() {
+      if (STATE.unusedWordPool.length === 0) {
+        refreshWordPool();
+      }
+      return STATE.unusedWordPool.pop();
+    }
+
+    // Generate formatted word (capitalization, punctuation, or numbers)
+    function generateWordElement(index) {
+      let wordText = getNextWordFromPool();
+
+      // Sprinkle numbers if Numbers Mode is on
+      if (STATE.numbersMode && Math.random() < 0.12) {
+        // 1-3 digit numbers
+        const digits = Math.floor(Math.random() * 3) + 1;
+        if (digits === 1) wordText = Math.floor(Math.random() * 10).toString();
+        else if (digits === 2) wordText = (Math.floor(Math.random() * 90) + 10).toString();
+        else wordText = (Math.floor(Math.random() * 900) + 100).toString();
+      } else if (STATE.punctuationMode) {
+        // Apply punctuation randomly
+        const rand = Math.random();
+        if (rand < 0.08) {
+          // Capitalize & add period at end
+          wordText = wordText.charAt(0).toUpperCase() + wordText.slice(1) + ".";
+        } else if (rand < 0.14) {
+          // Add comma
+          wordText = wordText + ",";
+        } else if (rand < 0.18) {
+          // Add question mark
+          wordText = wordText.charAt(0).toUpperCase() + wordText.slice(1) + "?";
+        } else if (rand < 0.22) {
+          // Quotes
+          wordText = `"${wordText}"`;
+        } else if (rand < 0.26) {
+          // Apostrophe S or apostrophe inside word (contraction simulation)
+          if (wordText.length > 3 && !wordText.endsWith("s")) {
+            wordText = wordText + "'s";
+          }
+        }
+      }
+
+      return wordText;
+    }
+
+    // Generate full list of words for the test
+    function buildWordList() {
+      STATE.words = [];
+      // If word limit count, we generate exactly that number of words
+      const countToGenerate = STATE.activeMode === 'word' ? STATE.wordLimit : 100;
+      for (let i = 0; i < countToGenerate; i++) {
+        STATE.words.push(generateWordElement(i));
+      }
+    }
+
+    // Append more words if running low in Time Trial or Zen mode
+    function appendMoreWordsIfNeeded() {
+      if (STATE.activeMode === 'word') return;
+      // If we are within 25 words of the end, add 50 more
+      if (STATE.words.length - STATE.currentWordIndex < 25) {
+        const targetContainer = DOM.wordsInner;
+        for (let i = 0; i < 50; i++) {
+          const newWordText = generateWordElement(STATE.words.length);
+          STATE.words.push(newWordText);
+          
+          // Append to DOM
+          const wordSpan = document.createElement('span');
+          wordSpan.className = 'word';
+          wordSpan.dataset.wordIndex = STATE.words.length - 1;
+          
+          for (let c = 0; c < newWordText.length; c++) {
+            const charSpan = document.createElement('span');
+            charSpan.className = 'char';
+            charSpan.textContent = newWordText[c];
+            wordSpan.appendChild(charSpan);
+          }
+          targetContainer.appendChild(wordSpan);
+        }
+      }
+    }
+
+    // Initialize application settings
+    function init() {
+      cacheDOM();
+      loadSettings();
+      setupEventListeners();
+      resetTestState();
+      
+      // Auto focus on load
+      DOM.hiddenInput.focus();
+    }
+
+    // Safe Storage Helpers
+    function safeGetItem(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function safeSetItem(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        // Ignore
+      }
+    }
+
+    // Load configs from local storage
+    function loadSettings() {
+      const savedTheme = safeGetItem('typer_theme');
+      if (savedTheme) {
+        CONFIG.theme = savedTheme;
+      } else {
+        // System preference default
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          CONFIG.theme = 'light';
+        }
+      }
+      applyTheme();
+
+      const savedMode = safeGetItem('typer_mode');
+      if (savedMode) STATE.activeMode = savedMode;
+      
+      const savedTime = safeGetItem('typer_time_limit');
+      if (savedTime) STATE.timeLimit = parseInt(savedTime, 10);
+
+      const savedWord = safeGetItem('typer_word_limit');
+      if (savedWord) STATE.wordLimit = parseInt(savedWord, 10);
+
+      STATE.punctuationMode = safeGetItem('typer_punctuation') === 'true';
+      STATE.numbersMode = safeGetItem('typer_numbers') === 'true';
+      STATE.countdownEnabled = safeGetItem('typer_countdown') === 'true';
+
+      // Update UI state for menu options
+      updateMenuUI();
+    }
+
+    // Save configurations
+    function saveSettings() {
+      safeSetItem('typer_mode', STATE.activeMode);
+      safeSetItem('typer_time_limit', STATE.timeLimit);
+      safeSetItem('typer_word_limit', STATE.wordLimit);
+      safeSetItem('typer_punctuation', STATE.punctuationMode);
+      safeSetItem('typer_numbers', STATE.numbersMode);
+      safeSetItem('typer_countdown', STATE.countdownEnabled);
+    }
+
+    function applyTheme() {
+      if (CONFIG.theme === 'light') {
+        DOM.body.classList.add('light');
+        DOM.themeIconMoon.style.display = 'none';
+        DOM.themeIconSun.style.display = 'block';
+      } else {
+        DOM.body.classList.remove('light');
+        DOM.themeIconMoon.style.display = 'block';
+        DOM.themeIconSun.style.display = 'none';
+      }
+    }
+
+    // Sync menu visuals with STATE
+    function updateMenuUI() {
+      // Mode tabs
+      DOM.tabBtns.forEach(btn => {
+        if (btn.dataset.mode === STATE.activeMode) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Config rows display
+      if (STATE.activeMode === 'time') {
+        DOM.timeConfigs.style.display = 'flex';
+        DOM.wordConfigs.style.display = 'none';
+        
+        DOM.timeConfigs.querySelectorAll('.pill-btn').forEach(btn => {
+          if (parseInt(btn.dataset.val, 10) === STATE.timeLimit) btn.classList.add('active');
+          else btn.classList.remove('active');
+        });
+      } else if (STATE.activeMode === 'word') {
+        DOM.timeConfigs.style.display = 'none';
+        DOM.wordConfigs.style.display = 'flex';
+
+        DOM.wordConfigs.querySelectorAll('.pill-btn').forEach(btn => {
+          if (parseInt(btn.dataset.val, 10) === STATE.wordLimit) btn.classList.add('active');
+          else btn.classList.remove('active');
+        });
+      } else {
+        // Zen
+        DOM.timeConfigs.style.display = 'none';
+        DOM.wordConfigs.style.display = 'none';
+      }
+
+      // Toggles
+      DOM.togglePunctuation.classList.toggle('active', STATE.punctuationMode);
+      DOM.toggleNumbers.classList.toggle('active', STATE.numbersMode);
+      DOM.toggleCountdown.classList.toggle('active', STATE.countdownEnabled);
+    }
+
+    // Reset whole stats and setup new words
+    function resetTestState() {
+      // Clear timers
+      if (STATE.timerIntervalId) {
+        clearInterval(STATE.timerIntervalId);
+        STATE.timerIntervalId = null;
+      }
+
+      // Reset values
+      STATE.isTestRunning = false;
+      STATE.isCountdownActive = false;
+      STATE.isFinished = false;
+      STATE.startTime = null;
+      STATE.elapsedSeconds = 0;
+      
+      STATE.wpmHistory = [];
+      STATE.totalChars = 0;
+      STATE.correctChars = 0;
+      STATE.incorrectChars = 0;
+      STATE.wordsCorrect = 0;
+      STATE.wordsIncorrect = 0;
+      STATE.currentStreak = 0;
+      STATE.bestStreak = 0;
+
+      STATE.currentWordIndex = 0;
+
+      // Reset pools
+      refreshWordPool();
+      buildWordList();
+
+      // Clear input
+      DOM.hiddenInput.value = '';
+      STATE.prevInputVal = '';
+      
+      // Close overlays
+      DOM.resultsOverlay.classList.remove('active');
+      DOM.countdownScreen.classList.remove('active');
+      DOM.focusOverlay.classList.remove('hidden');
+
+      // Update UI elements
+      renderWords();
+      updateLiveStatsUI();
+      positionCaret();
+      
+      // Auto focus hidden input
+      DOM.hiddenInput.focus();
+      DOM.typingBoxWrapper.classList.add('focused');
+    }
+
+    // Pre-timed countdown routine
+    function triggerCountdown(callback) {
+      STATE.isCountdownActive = true;
+      DOM.countdownScreen.classList.add('active');
+      DOM.hiddenInput.blur(); // temporarily blur input
+
+      let counts = ['3', '2', '1', 'Go!'];
+      let index = 0;
+
+      const runStep = () => {
+        if (index < counts.length) {
+          DOM.countdownNumber.textContent = counts[index];
+          DOM.countdownNumber.classList.remove('count-anim');
+          // Trigger reflow to restart animation
+          void DOM.countdownNumber.offsetWidth;
+          DOM.countdownNumber.classList.add('count-anim');
+          index++;
+          setTimeout(runStep, 1000);
+        } else {
+          // Finished countdown
+          DOM.countdownScreen.classList.remove('active');
+          STATE.isCountdownActive = false;
+          DOM.hiddenInput.focus();
+          callback();
+        }
+      };
+
+      runStep();
+    }
+
+    // Start typing practice run
+    function startTest() {
+      STATE.isTestRunning = true;
+      STATE.startTime = Date.now();
+      
+      DOM.focusOverlay.classList.add('hidden');
+      DOM.menuSection.style.opacity = '0.35'; // mute options during test
+      DOM.menuSection.style.pointerEvents = 'none';
+
+      // Start periodic timer
+      STATE.timerIntervalId = setInterval(onTimerTick, 1000);
+      updateLiveStatsUI();
+    }
+
+    // Standard interval tick
+    function onTimerTick() {
+      if (!STATE.isTestRunning) return;
+
+      STATE.elapsedSeconds++;
+
+      // WPM updates every second
+      const activeWPM = calculateCurrentWPM();
+      STATE.wpmHistory.push(activeWPM);
+
+      // Check termination conditions
+      if (STATE.activeMode === 'time' && STATE.elapsedSeconds >= STATE.timeLimit) {
+        endTest();
+        return;
+      }
+
+      updateLiveStatsUI();
+    }
+
+    // End test and transition to results overlay
+    function endTest() {
+      STATE.isTestRunning = false;
+      STATE.isFinished = true;
+      
+      if (STATE.timerIntervalId) {
+        clearInterval(STATE.timerIntervalId);
+        STATE.timerIntervalId = null;
+      }
+
+      DOM.menuSection.style.opacity = '1';
+      DOM.menuSection.style.pointerEvents = 'all';
+      DOM.hiddenInput.blur();
+
+      // If test was ended immediately, ensure we have at least one WPM data point
+      if (STATE.wpmHistory.length === 0) {
+        STATE.wpmHistory.push(calculateCurrentWPM());
+      }
+
+      displayResults();
+    }
+
+    // Calculations logic
+    function calculateCurrentWPM() {
+      if (STATE.elapsedSeconds === 0) return 0;
+      const wpm = (STATE.correctChars / 5) / (STATE.elapsedSeconds / 60);
+      return Math.max(0, Math.round(wpm));
+    }
+
+    function calculateRawWPM() {
+      if (STATE.elapsedSeconds === 0) return 0;
+      const raw = (STATE.totalChars / 5) / (STATE.elapsedSeconds / 60);
+      return Math.max(0, Math.round(raw));
+    }
+
+    function calculateAccuracy() {
+      if (STATE.totalChars === 0) return 100;
+      return Math.round((STATE.correctChars / STATE.totalChars) * 100);
+    }
+
+    function calculateConsistency() {
+      if (STATE.wpmHistory.length <= 1) return 100;
+      
+      // Calculate Mean
+      const sum = STATE.wpmHistory.reduce((a, b) => a + b, 0);
+      const mean = sum / STATE.wpmHistory.length;
+      if (mean === 0) return 100;
+
+      // Calculate Std Dev
+      const variance = STATE.wpmHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / STATE.wpmHistory.length;
+      const stdDev = Math.sqrt(variance);
+
+      // Consistency: 100 - Coefficient of Variation
+      const cv = (stdDev / mean) * 100;
+      const consistency = Math.max(0, Math.min(100, 100 - cv));
+      return Math.round(consistency);
+    }
+
+    // Show result cards
+    function displayResults() {
+      const finalWpm = calculateCurrentWPM();
+      const rawWpm = calculateRawWPM();
+      const accuracy = calculateAccuracy();
+      const consistency = calculateConsistency();
+
+      // Set values with counting animation
+      animateStatCounter(DOM.resWpm, finalWpm);
+      DOM.resRawWpm.textContent = `raw: ${rawWpm} wpm`;
+      DOM.resAccuracy.textContent = `${accuracy}%`;
+      DOM.resChars.textContent = `${STATE.correctChars} correct | ${STATE.incorrectChars} incorrect | ${STATE.totalChars} total`;
+      DOM.resConsistency.textContent = `${consistency}%`;
+      DOM.resStreak.textContent = `best streak: ${STATE.bestStreak}`;
+
+      // Show overlay
+      DOM.resultsOverlay.classList.add('active');
+
+      // Draw canvas chart
+      // Small timeout to guarantee layout calculations for dynamic canvas sizing
+      setTimeout(() => {
+        drawSparkline();
+      }, 50);
+    }
+
+    // Simple counter tick effect
+    function animateStatCounter(element, targetValue) {
+      let currentVal = 0;
+      const duration = 500; // ms
+      const startTime = performance.now();
+
+      const step = (now) => {
+        const progress = Math.min(1, (now - startTime) / duration);
+        currentVal = Math.floor(progress * targetValue);
+        element.textContent = currentVal;
+        
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          element.textContent = targetValue;
+        }
+      };
+      
+      requestAnimationFrame(step);
+    }
+
+    // ----------------------------------------------------
+    // 6. INPUT HANDLER
+    // ----------------------------------------------------
+    
+    function onInputReceived(e) {
+      // Ensure test starts on first keypress
+      if (!STATE.isTestRunning && !STATE.isFinished && !STATE.isCountdownActive) {
+        if (STATE.countdownEnabled) {
+          triggerCountdown(startTest);
+        } else {
+          startTest();
+        }
+      }
+
+      // If test is currently not accepting characters
+      if (!STATE.isTestRunning) {
+        DOM.hiddenInput.value = '';
+        STATE.prevInputVal = '';
+        return;
+      }
+
+      const inputVal = DOM.hiddenInput.value;
+      const prevInputVal = STATE.prevInputVal || '';
+      const activeWordText = STATE.words[STATE.currentWordIndex];
+      const wordElements = DOM.wordsInner.querySelectorAll('.word');
+      const activeWordEl = wordElements[STATE.currentWordIndex];
+      const charElements = activeWordEl.querySelectorAll('.char');
+
+      // Detect Caps Lock change
+      checkCapsLock(e);
+
+      // Check if spacebar was submitted
+      if (inputVal.endsWith(' ')) {
+        const trimmedVal = inputVal.trim();
+        
+        if (trimmedVal.length === 0) {
+          // Prevent multiple leading spaces
+          DOM.hiddenInput.value = '';
+          STATE.prevInputVal = '';
+          return;
+        }
+
+        // Commit word
+        commitWord(trimmedVal, activeWordText, activeWordEl);
+        return;
+      }
+
+      // Dynamic character coloring
+      // Clean up previous overshoots
+      const overshootElements = activeWordEl.querySelectorAll('.char.overshoot');
+      overshootElements.forEach(el => el.remove());
+
+      let isCurrentTypingCorrect = true;
+
+      // Color target characters based on current input
+      for (let i = 0; i < activeWordText.length; i++) {
+        const charEl = charElements[i];
+        if (i < inputVal.length) {
+          if (inputVal[i] === activeWordText[i]) {
+            charEl.className = 'char correct';
+          } else {
+            charEl.className = 'char incorrect';
+            isCurrentTypingCorrect = false;
+          }
+        } else {
+          charEl.className = 'char';
+        }
+      }
+
+      // Handle extra character overshoot
+      if (inputVal.length > activeWordText.length) {
+        isCurrentTypingCorrect = false;
+        for (let i = activeWordText.length; i < inputVal.length; i++) {
+          const extraCharSpan = document.createElement('span');
+          extraCharSpan.className = 'char incorrect overshoot';
+          extraCharSpan.textContent = inputVal[i];
+          activeWordEl.appendChild(extraCharSpan);
+        }
+      }
+
+      // Micro-interaction: Shake word container briefly on incorrect keystroke input
+      if (!isCurrentTypingCorrect && inputVal.length > 0) {
+        // Only trigger shake if last typed char is wrong
+        const lastInputIndex = inputVal.length - 1;
+        const targetChar = activeWordText[lastInputIndex];
+        if (!targetChar || inputVal[lastInputIndex] !== targetChar) {
+          activeWordEl.classList.remove('shaking');
+          void activeWordEl.offsetWidth; // trigger layout reflow
+          activeWordEl.classList.add('shaking');
+          
+          // Increment incorrect stats
+          STATE.incorrectChars++;
+        }
+      }
+
+      // Increment total characters typed using delta tracking
+      if (inputVal.length > prevInputVal.length) {
+        const delta = inputVal.length - prevInputVal.length;
+        STATE.totalChars += delta;
+      }
+
+      // Re-evaluate correctChars as net correct character spans in all completed words + current word
+      recalculateNetCorrectChars();
+
+      // In Word Count mode, if this is the last word and it is typed correctly, finish instantly!
+      if (STATE.activeMode === 'word' && STATE.currentWordIndex === STATE.words.length - 1) {
+        if (inputVal === activeWordText) {
+          // Word matches perfectly, auto finish!
+          commitWord(inputVal, activeWordText, activeWordEl);
+          return;
+        }
+      }
+
+      // Save input value for the next input event delta calculation
+      STATE.prevInputVal = inputVal;
+
+      // Position caret & auto scroll
+      positionCaret();
+      updateLiveStatsUI();
+    }
+
+    // Recalculate exact number of correct characters currently in completed and active words
+    function recalculateNetCorrectChars() {
+      let count = 0;
+      const wordElements = DOM.wordsInner.querySelectorAll('.word');
+      
+      // Completed words
+      for (let w = 0; w < STATE.currentWordIndex; w++) {
+        const wordEl = wordElements[w];
+        if (wordEl.classList.contains('correct')) {
+          // All characters in a correct word are correct. Add word length plus 1 space character
+          count += STATE.words[w].length + 1;
+        } else {
+          // If word was incorrect, check individual char spans that are correct
+          const charSpans = wordEl.querySelectorAll('.char');
+          charSpans.forEach(c => {
+            if (c.classList.contains('correct')) count++;
+          });
+          // Account for space
+          count += 1; // standard typing tests treat spaces as correct characters typed
+        }
+      }
+
+      // Active word
+      const activeWordEl = wordElements[STATE.currentWordIndex];
+      if (activeWordEl) {
+        const charSpans = activeWordEl.querySelectorAll('.char');
+        charSpans.forEach(c => {
+          if (c.classList.contains('correct') && !c.classList.contains('overshoot')) count++;
+        });
+      }
+
+      STATE.correctChars = count;
+    }
+
+    // Submit a word to the completed pile
+    function commitWord(typedWord, targetWord, wordEl) {
+      if (typedWord === targetWord) {
+        wordEl.className = 'word correct';
+        STATE.wordsCorrect++;
+        STATE.currentStreak++;
+        if (STATE.currentStreak > STATE.bestStreak) {
+          STATE.bestStreak = STATE.currentStreak;
+        }
+      } else {
+        wordEl.className = 'word incorrect';
+        STATE.wordsIncorrect++;
+        STATE.currentStreak = 0;
+      }
+
+      // Account for spaces in total characters
+      STATE.totalChars++; 
+
+      // Advance index
+      STATE.currentWordIndex++;
+
+      // If word mode and target reached
+      if (STATE.activeMode === 'word' && STATE.currentWordIndex >= STATE.words.length) {
+        // Complete test
+        recalculateNetCorrectChars();
+        endTest();
+        return;
+      }
+
+      // Clear input and state trackers
+      DOM.hiddenInput.value = '';
+      STATE.prevInputVal = '';
+
+      // Append next words in time/zen modes
+      appendMoreWordsIfNeeded();
+
+      // Redraw layout adjustments
+      recalculateNetCorrectChars();
+      positionCaret();
+      scrollToActiveWord();
+      updateLiveStatsUI();
+    }
+
+    // Caps Lock verification
+    function checkCapsLock(event) {
+      if (event && typeof event.getModifierState === 'function') {
+        const isActive = event.getModifierState('CapsLock');
+        DOM.capsLockBadge.classList.toggle('active', isActive);
+      }
+    }
+
+    // ----------------------------------------------------
+    // 7. RENDER FUNCTIONS
+    // ----------------------------------------------------
+    
+    // Fill main block container with word list spans
+    function renderWords() {
+      const container = DOM.wordsInner;
+      container.innerHTML = '';
+      
+      STATE.words.forEach((wordText, wIndex) => {
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'word';
+        wordSpan.dataset.wordIndex = wIndex;
+
+        for (let c = 0; c < wordText.length; c++) {
+          const charSpan = document.createElement('span');
+          charSpan.className = 'char';
+          charSpan.textContent = wordText[c];
+          wordSpan.appendChild(charSpan);
+        }
+
+        container.appendChild(wordSpan);
+      });
+
+      // Position caret at default start
+      positionCaret();
+      // Reset scroll position of container
+      DOM.wordDisplayContainer.scrollTop = 0;
+    }
+
+    // Align caret position over active typing characters
+    function positionCaret() {
+      const wordElements = DOM.wordsInner.querySelectorAll('.word');
+      const activeWordEl = wordElements[STATE.currentWordIndex];
+      
+      if (!activeWordEl) return;
+
+      const inputVal = DOM.hiddenInput.value;
+      const charElements = activeWordEl.querySelectorAll('.char');
+      
+      let targetLeft = 0;
+      let targetTop = 0;
+
+      // Reset caret blinking status on keystrokes
+      DOM.caret.classList.remove('blinking');
+      clearTimeout(DOM.caretBlinkTimeout);
+      DOM.caretBlinkTimeout = setTimeout(() => {
+        DOM.caret.classList.add('blinking');
+      }, 500);
+
+      if (inputVal.length === 0) {
+        // Position at start of first character
+        if (charElements.length > 0) {
+          targetLeft = charElements[0].offsetLeft;
+          targetTop = charElements[0].offsetTop;
+        } else {
+          targetLeft = activeWordEl.offsetLeft;
+          targetTop = activeWordEl.offsetTop;
+        }
+      } else if (inputVal.length <= charElements.length) {
+        // Position at the beginning of the current character
+        const activeCharEl = charElements[inputVal.length - 1];
+        targetLeft = activeCharEl.offsetLeft + activeCharEl.offsetWidth;
+        targetTop = activeCharEl.offsetTop;
+      } else {
+        // Overshoot cursor position at the end of the word
+        const lastCharEl = charElements[charElements.length - 1];
+        targetLeft = lastCharEl.offsetLeft + lastCharEl.offsetWidth;
+        targetTop = lastCharEl.offsetTop;
+
+        // Account for overshoot nodes
+        const overshootEls = activeWordEl.querySelectorAll('.char.overshoot');
+        if (overshootEls.length > 0) {
+          const finalOvershoot = overshootEls[overshootEls.length - 1];
+          targetLeft = finalOvershoot.offsetLeft + finalOvershoot.offsetWidth;
+          targetTop = finalOvershoot.offsetTop;
+        }
+      }
+
+      // Disable caret transition on vertical wrap shifts to prevent diagonal sliding
+      const currentCaretTop = parseFloat(DOM.caret.style.top) || 0;
+      if (Math.abs(targetTop - currentCaretTop) > 5) {
+        DOM.caret.style.transition = 'none';
+        DOM.caret.style.left = `${targetLeft}px`;
+        DOM.caret.style.top = `${targetTop}px`;
+        void DOM.caret.offsetWidth; // trigger reflow
+        DOM.caret.style.transition = 'left 70ms ease, top 70ms ease';
+      } else {
+        DOM.caret.style.left = `${targetLeft}px`;
+        DOM.caret.style.top = `${targetTop}px`;
+      }
+    }
+
+    // Auto centering current typing word in typing box
+    function scrollToActiveWord() {
+      const wordElements = DOM.wordsInner.querySelectorAll('.word');
+      const activeWordEl = wordElements[STATE.currentWordIndex];
+      
+      if (!activeWordEl) return;
+
+      const container = DOM.wordDisplayContainer;
+      const containerHeight = container.clientHeight;
+      const activeOffsetTop = activeWordEl.offsetTop;
+      const activeHeight = activeWordEl.offsetHeight;
+
+      // Scroll so the active word is vertically centered in the container
+      const newScrollTop = activeOffsetTop - (containerHeight / 2) + (activeHeight / 2);
+      container.scrollTop = newScrollTop;
+    }
+
+    // Update real-time chips
+    function updateLiveStatsUI() {
+      DOM.liveWpm.textContent = calculateCurrentWPM();
+      DOM.liveAccuracy.innerHTML = `${calculateAccuracy()}<span class="unit">%</span>`;
+      DOM.liveStreak.textContent = STATE.currentStreak;
+
+      // Progress Tracker display
+      if (STATE.activeMode === 'time') {
+        DOM.progressLabel.textContent = 'time';
+        const remaining = Math.max(0, STATE.timeLimit - STATE.elapsedSeconds);
+        DOM.liveProgress.textContent = `${remaining}s`;
+      } else if (STATE.activeMode === 'word') {
+        DOM.progressLabel.textContent = 'progress';
+        DOM.liveProgress.textContent = `${STATE.currentWordIndex}/${STATE.words.length}`;
+      } else {
+        // Zen Mode
+        DOM.progressLabel.textContent = 'elapsed';
+        DOM.liveProgress.textContent = `${STATE.elapsedSeconds}s`;
+      }
+    }
+
+    // Draw the sparkline chart inside results using 2D canvas
+    function drawSparkline() {
+      const canvas = DOM.sparklineCanvas;
+      const ctx = canvas.getContext('2d');
+      const history = STATE.wpmHistory;
+
+      // Handle responsive high-DPI scaling
+      const width = canvas.parentElement.clientWidth;
+      const height = 100;
+      
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      // Clean canvas
+      ctx.clearRect(0, 0, width, height);
+
+      if (history.length <= 1) {
+        // Render simple baseline if not enough data points
+        ctx.strokeStyle = 'rgba(167, 139, 250, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+
+        ctx.fillStyle = 'var(--text-muted)';
+        ctx.font = '12px var(--font-ui)';
+        ctx.textAlign = 'center';
+        ctx.fillText('No history data collected', width / 2, height / 2 - 10);
+        return;
+      }
+
+      const maxVal = Math.max(...history, 20); // default maximum floor of 20
+      const minVal = 0; // standard Y-axis baseline at 0
+
+      // Map values to coordinates
+      const points = history.map((val, idx) => {
+        const x = (idx / (history.length - 1)) * (width - 40) + 20; // 20px padding left/right
+        const y = height - ((val / maxVal) * (height - 30) + 15); // 15px padding top/bottom
+        return { x, y, val };
+      });
+
+      // 1. Draw smooth Bezier line for stroking
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      
+      ctx.strokeStyle = 'var(--accent-highlight)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // 2. Draw separate filled path for gradient area below the line
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx.lineTo(points[points.length - 1].x, height);
+      ctx.lineTo(points[0].x, height);
+      ctx.closePath();
+
+      const fillGrad = ctx.createLinearGradient(0, 0, 0, height);
+      fillGrad.addColorStop(0, 'rgba(167, 139, 250, 0.25)');
+      fillGrad.addColorStop(1, 'rgba(167, 139, 250, 0.00)');
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+
+      // 3. Highlight and label peak WPM node
+      let peakIdx = 0;
+      let peakVal = history[0];
+      for (let i = 1; i < history.length; i++) {
+        if (history[i] > peakVal) {
+          peakVal = history[i];
+          peakIdx = i;
+        }
+      }
+
+      const peakPoint = points[peakIdx];
+
+      // Draw outer indicator ring
+      ctx.beginPath();
+      ctx.arc(peakPoint.x, peakPoint.y, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.4)';
+      ctx.fill();
+
+      // Draw inner node dot
+      ctx.beginPath();
+      ctx.arc(peakPoint.x, peakPoint.y, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = 'var(--accent-highlight)';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
+
+      // Render tooltip text
+      ctx.fillStyle = 'var(--text-primary)';
+      ctx.font = 'bold 10px var(--font-typing)';
+      ctx.textAlign = 'center';
+      
+      // Determine tooltip offset direction dynamically to prevent canvas clipping
+      let labelY = peakPoint.y - 12;
+      if (labelY < 15) labelY = peakPoint.y + 16; // flip text down if peak is too high
+      
+      ctx.fillText(`Peak: ${peakVal} WPM`, peakPoint.x, labelY);
+    }
+
+    // ----------------------------------------------------
+    // 8. EVENT LISTENERS
+    // ----------------------------------------------------
+    function setupEventListeners() {
+      // Input capture
+      DOM.hiddenInput.addEventListener('input', onInputReceived);
+      
+      // Caps Lock trigger checks on keyboard interactions
+      window.addEventListener('keydown', (e) => {
+        checkCapsLock(e);
+        
+        // Prevent default tab behavior (refocusing other DOM controls) to restart instantly
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          resetTestState();
+        }
+
+        // Escape to cancel or close results
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (STATE.isTestRunning) {
+            endTest();
+          } else {
+            resetTestState();
+          }
+        }
+
+        // Enter key shortcut on results page to retry
+        if (e.key === 'Enter' && STATE.isFinished) {
+          e.preventDefault();
+          resetTestState();
+        }
+      });
+      window.addEventListener('keyup', checkCapsLock);
+
+      // Mouse triggers to keep typing area focused
+      document.addEventListener('click', (e) => {
+        // Exclude interactive menu actions, overlays and buttons
+        const isInteractive = e.target.closest('button') || 
+                            e.target.closest('.tabs-wrapper') || 
+                            e.target.closest('.config-row') || 
+                            e.target.closest('.results-card') ||
+                            e.target.closest('input');
+        
+        if (!isInteractive) {
+          DOM.hiddenInput.focus();
+        }
+      });
+
+      // Typing area focus transitions
+      DOM.hiddenInput.addEventListener('focus', () => {
+        DOM.typingBoxWrapper.classList.add('focused');
+      });
+      
+      DOM.hiddenInput.addEventListener('blur', () => {
+        if (!STATE.isCountdownActive && !STATE.isFinished) {
+          DOM.typingBoxWrapper.classList.remove('focused');
+        }
+      });
+
+      // Click to focus overlay handler
+      DOM.focusOverlay.addEventListener('click', () => {
+        DOM.hiddenInput.focus();
+        DOM.focusOverlay.classList.add('hidden');
+      });
+
+      // Theme toggle event
+      DOM.themeToggle.addEventListener('click', () => {
+        CONFIG.theme = CONFIG.theme === 'dark' ? 'light' : 'dark';
+        safeSetItem('typer_theme', CONFIG.theme);
+        applyTheme();
+        // Redraw sparkline for new grid colors if results are open
+        if (STATE.isFinished) {
+          drawSparkline();
+        }
+      });
+
+      // Gameplay Tab switching
+      DOM.tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          STATE.activeMode = btn.dataset.mode;
+          saveSettings();
+          updateMenuUI();
+          resetTestState();
+        });
+      });
+
+      // Config select pills
+      DOM.pillBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseInt(btn.dataset.val, 10);
+          if (STATE.activeMode === 'time') {
+            STATE.timeLimit = val;
+          } else if (STATE.activeMode === 'word') {
+            STATE.wordLimit = val;
+          }
+          saveSettings();
+          updateMenuUI();
+          resetTestState();
+        });
+      });
+
+      // Punctuation, Numbers, Countdown toggles
+      DOM.togglePunctuation.addEventListener('click', () => {
+        STATE.punctuationMode = !STATE.punctuationMode;
+        saveSettings();
+        updateMenuUI();
+        resetTestState();
+      });
+
+      DOM.toggleNumbers.addEventListener('click', () => {
+        STATE.numbersMode = !STATE.numbersMode;
+        saveSettings();
+        updateMenuUI();
+        resetTestState();
+      });
+
+      DOM.toggleCountdown.addEventListener('click', () => {
+        STATE.countdownEnabled = !STATE.countdownEnabled;
+        saveSettings();
+        updateMenuUI();
+      });
+
+      // Results overlay button controls
+      DOM.resMenuBtn.addEventListener('click', () => {
+        resetTestState();
+      });
+
+      DOM.resRetryBtn.addEventListener('click', () => {
+        resetTestState();
+      });
+      
+      // Auto-resize canvas event
+      window.addEventListener('resize', () => {
+        if (STATE.isFinished) {
+          drawSparkline();
+        }
+      });
+    }
+
+    // ----------------------------------------------------
+    // 10. INITIALIZATION CALL
+    // ----------------------------------------------------
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
