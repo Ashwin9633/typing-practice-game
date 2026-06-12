@@ -1755,34 +1755,39 @@
         DOM.caret.classList.add('blinking');
       }, 500);
 
-      // Note: Because '.word' has position:relative, '.char' offsets are relative to '.word'.
-      // We must add the word's left and top offsets to align the caret relative to '#words-inner'.
+      const containerRect = DOM.wordsInner.getBoundingClientRect();
+
       if (inputVal.length === 0) {
         // Position at start of first character
         if (charElements.length > 0) {
-          targetLeft = activeWordEl.offsetLeft + charElements[0].offsetLeft;
-          targetTop = activeWordEl.offsetTop + charElements[0].offsetTop;
+          const charRect = charElements[0].getBoundingClientRect();
+          targetLeft = charRect.left - containerRect.left;
+          targetTop = charRect.top - containerRect.top;
         } else {
-          targetLeft = activeWordEl.offsetLeft;
-          targetTop = activeWordEl.offsetTop;
+          const wordRect = activeWordEl.getBoundingClientRect();
+          targetLeft = wordRect.left - containerRect.left;
+          targetTop = wordRect.top - containerRect.top;
         }
       } else if (inputVal.length <= charElements.length) {
         // Position at the end of the last typed character
         const activeCharEl = charElements[inputVal.length - 1];
-        targetLeft = activeWordEl.offsetLeft + activeCharEl.offsetLeft + activeCharEl.offsetWidth;
-        targetTop = activeWordEl.offsetTop + activeCharEl.offsetTop;
+        const charRect = activeCharEl.getBoundingClientRect();
+        targetLeft = charRect.right - containerRect.left;
+        targetTop = charRect.top - containerRect.top;
       } else {
         // Overshoot cursor position at the end of the word
         const lastCharEl = charElements[charElements.length - 1];
-        targetLeft = activeWordEl.offsetLeft + lastCharEl.offsetLeft + lastCharEl.offsetWidth;
-        targetTop = activeWordEl.offsetTop + lastCharEl.offsetTop;
+        let charRect = lastCharEl ? lastCharEl.getBoundingClientRect() : activeWordEl.getBoundingClientRect();
+        targetLeft = (lastCharEl ? charRect.right : charRect.left) - containerRect.left;
+        targetTop = charRect.top - containerRect.top;
 
         // Account for overshoot nodes
         const overshootEls = activeWordEl.querySelectorAll('.char.overshoot');
         if (overshootEls.length > 0) {
           const finalOvershoot = overshootEls[overshootEls.length - 1];
-          targetLeft = activeWordEl.offsetLeft + finalOvershoot.offsetLeft + finalOvershoot.offsetWidth;
-          targetTop = activeWordEl.offsetTop + finalOvershoot.offsetTop;
+          const overshootRect = finalOvershoot.getBoundingClientRect();
+          targetLeft = overshootRect.right - containerRect.left;
+          targetTop = overshootRect.top - containerRect.top;
         }
       }
 
