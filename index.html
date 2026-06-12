@@ -872,8 +872,8 @@
 
       <!-- Main Word Display Area -->
       <div id="word-display-container" class="word-display-container">
-        <div id="caret" class="caret blinking"></div>
         <div id="words-inner" class="words-inner">
+          <div id="caret" class="caret blinking"></div>
           <!-- Spans populated by JavaScript -->
         </div>
       </div>
@@ -1709,7 +1709,10 @@
     // Fill main block container with word list spans
     function renderWords() {
       const container = DOM.wordsInner;
-      container.innerHTML = '';
+      
+      // Remove only word spans to keep caret intact
+      const words = container.querySelectorAll('.word');
+      words.forEach(w => w.remove());
       
       STATE.words.forEach((wordText, wIndex) => {
         const wordSpan = document.createElement('span');
@@ -1752,32 +1755,34 @@
         DOM.caret.classList.add('blinking');
       }, 500);
 
+      // Note: Because '.word' has position:relative, '.char' offsets are relative to '.word'.
+      // We must add the word's left and top offsets to align the caret relative to '#words-inner'.
       if (inputVal.length === 0) {
         // Position at start of first character
         if (charElements.length > 0) {
-          targetLeft = charElements[0].offsetLeft;
-          targetTop = charElements[0].offsetTop;
+          targetLeft = activeWordEl.offsetLeft + charElements[0].offsetLeft;
+          targetTop = activeWordEl.offsetTop + charElements[0].offsetTop;
         } else {
           targetLeft = activeWordEl.offsetLeft;
           targetTop = activeWordEl.offsetTop;
         }
       } else if (inputVal.length <= charElements.length) {
-        // Position at the beginning of the current character
+        // Position at the end of the last typed character
         const activeCharEl = charElements[inputVal.length - 1];
-        targetLeft = activeCharEl.offsetLeft + activeCharEl.offsetWidth;
-        targetTop = activeCharEl.offsetTop;
+        targetLeft = activeWordEl.offsetLeft + activeCharEl.offsetLeft + activeCharEl.offsetWidth;
+        targetTop = activeWordEl.offsetTop + activeCharEl.offsetTop;
       } else {
         // Overshoot cursor position at the end of the word
         const lastCharEl = charElements[charElements.length - 1];
-        targetLeft = lastCharEl.offsetLeft + lastCharEl.offsetWidth;
-        targetTop = lastCharEl.offsetTop;
+        targetLeft = activeWordEl.offsetLeft + lastCharEl.offsetLeft + lastCharEl.offsetWidth;
+        targetTop = activeWordEl.offsetTop + lastCharEl.offsetTop;
 
         // Account for overshoot nodes
         const overshootEls = activeWordEl.querySelectorAll('.char.overshoot');
         if (overshootEls.length > 0) {
           const finalOvershoot = overshootEls[overshootEls.length - 1];
-          targetLeft = finalOvershoot.offsetLeft + finalOvershoot.offsetWidth;
-          targetTop = finalOvershoot.offsetTop;
+          targetLeft = activeWordEl.offsetLeft + finalOvershoot.offsetLeft + finalOvershoot.offsetWidth;
+          targetTop = activeWordEl.offsetTop + finalOvershoot.offsetTop;
         }
       }
 
