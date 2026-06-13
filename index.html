@@ -757,6 +757,157 @@
         height: 125px;
       }
     }
+
+    /* ----------------------------------------------------
+       AUDIO CONFIG & FEEDBACK STYLES
+       ---------------------------------------------------- */
+    .audio-settings-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .volume-control-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      padding: 4px 12px 4px 6px;
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+      height: 34px;
+    }
+
+    .volume-slider {
+      width: 70px;
+      height: 4px;
+      border-radius: 2px;
+      outline: none;
+      background: var(--border-color);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent-highlight);
+      cursor: pointer;
+      transition: transform 100ms ease;
+    }
+
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Key Ripple Effect */
+    .key-ripple {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.6;
+      z-index: 5;
+    }
+
+    .key-ripple.correct {
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.4) 0%, rgba(167, 139, 250, 0) 70%);
+      animation: ripple-out 250ms cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+
+    .key-ripple.error {
+      background: radial-gradient(circle, rgba(224, 92, 92, 0.4) 0%, rgba(224, 92, 92, 0) 70%);
+      animation: ripple-out 250ms cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+
+    @keyframes ripple-out {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0;
+      }
+    }
+
+    /* Character pop animation */
+    .char.pop {
+      animation: char-pop-anim 80ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      display: inline-block;
+    }
+
+    @keyframes char-pop-anim {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    /* Word green complete flash */
+    .word.flash-green {
+      animation: word-flash-anim 200ms ease-out forwards;
+    }
+
+    @keyframes word-flash-anim {
+      0% { text-shadow: 0 0 12px #57c47a; }
+      100% { text-shadow: none; }
+    }
+
+    /* Micro shake animation for errors */
+    @keyframes micro-shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-2px); }
+      100% { transform: translateX(0); }
+    }
+
+    .word {
+      display: inline-block;
+    }
+
+    .word.shaking {
+      animation: micro-shake 120ms ease-in-out;
+    }
+
+    /* Streak Animations */
+    @keyframes streak-bounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .streak-pop {
+      animation: streak-bounce 150ms ease-out forwards;
+    }
+
+    @keyframes streak-glow-gold {
+      0% { box-shadow: 0 0 0px #fbbf24; }
+      50% { box-shadow: 0 0 15px #fbbf24; border-color: #fbbf24; }
+      100% { box-shadow: var(--shadow-sm); border-color: var(--border-color); }
+    }
+
+    .streak-glow {
+      animation: streak-glow-gold 500ms ease-in-out forwards;
+    }
+
+    /* Idle pulse animation */
+    @keyframes caret-pulse-idle {
+      0%, 100% { transform: scaleY(1); opacity: 1; }
+      50% { transform: scaleY(1.3) scaleX(1.5); opacity: 0.7; }
+    }
+
+    .caret.idle-pulsing {
+      animation: caret-pulse-idle 1s ease-in-out infinite;
+      box-shadow: 0 0 12px var(--accent-highlight);
+    }
   </style>
 </head>
 <body>
@@ -827,6 +978,32 @@
             <span>countdown</span>
           </button>
         </div>
+
+        <!-- Audio Settings -->
+        <div class="audio-settings-group">
+          <!-- Profile Selector -->
+          <div id="audio-profile-configs" class="pill-group">
+            <button class="pill-btn active" data-profile="clicky">Clicky</button>
+            <button class="pill-btn" data-profile="thocky">Thocky</button>
+            <button class="pill-btn" data-profile="soft">Soft</button>
+          </div>
+
+          <!-- Volume Controls -->
+          <div class="volume-control-wrapper">
+            <button id="toggle-mute" class="theme-toggle" aria-label="Toggle mute" style="padding: 6px;">
+              <svg id="mute-icon-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              <svg id="mute-icon-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+            </button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.7" class="volume-slider" aria-label="Volume Slider">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -843,7 +1020,7 @@
         <span class="value" id="live-accuracy">100<span class="unit">%</span></span>
       </div>
       <!-- Streak -->
-      <div class="stat-chip">
+      <div id="streak-chip-container" class="stat-chip">
         <span class="label">streak</span>
         <span class="value" id="live-streak">0</span>
       </div>
@@ -1003,7 +1180,15 @@
       unusedWordPool: [],
 
       // Track previous input value for key character delta calculations
-      prevInputVal: ''
+      prevInputVal: '',
+
+      // Audio & feedback configurations
+      audioVolume: 0.7,
+      audioMuted: false,
+      audioProfile: 'clicky',
+      idleTimeoutId: null,
+      caretLeft: 0,
+      caretTop: 0
     };
 
     // ----------------------------------------------------
@@ -1028,7 +1213,7 @@
         tabBtns: document.querySelectorAll('.tab-btn'),
         timeConfigs: document.getElementById('time-configs'),
         wordConfigs: document.getElementById('word-configs'),
-        pillBtns: document.querySelectorAll('.pill-btn'),
+        pillBtns: document.querySelectorAll('#time-configs .pill-btn, #word-configs .pill-btn'),
         togglePunctuation: document.getElementById('toggle-punctuation'),
         toggleNumbers: document.getElementById('toggle-numbers'),
         toggleCountdown: document.getElementById('toggle-countdown'),
@@ -1056,7 +1241,13 @@
         sparklineCanvas: document.getElementById('sparkline-canvas'),
         resMenuBtn: document.getElementById('res-menu-btn'),
         resRetryBtn: document.getElementById('res-retry-btn'),
-        capsLockBadge: document.getElementById('caps-lock')
+        capsLockBadge: document.getElementById('caps-lock'),
+        audioProfileConfigs: document.getElementById('audio-profile-configs'),
+        toggleMute: document.getElementById('toggle-mute'),
+        volumeSlider: document.getElementById('volume-slider'),
+        muteIconOn: document.getElementById('mute-icon-on'),
+        muteIconOff: document.getElementById('mute-icon-off'),
+        streakChipContainer: document.getElementById('streak-chip-container')
       };
     }
 
@@ -1064,6 +1255,317 @@
     // 5. GAME LOGIC FUNCTIONS
     // ----------------------------------------------------
     
+    // ----------------------------------------------------
+    // 4.5 AUDIO & VISUAL FEEDBACK ENGINE
+    // ----------------------------------------------------
+    let audioCtx = null;
+    let masterGain = null;
+
+    const SOUND_PROFILES = {
+      clicky: { clickFreq: 3800, thockFreq: 120 },
+      thocky: { clickFreq: 2200, thockFreq: 200 },
+      soft: { clickFreq: 4500, thockFreq: 80 }
+    };
+
+    function initAudio() {
+      if (!audioCtx) {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContextClass();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = STATE.audioMuted ? 0 : STATE.audioVolume;
+          masterGain.connect(audioCtx.destination);
+        } catch (e) {
+          console.warn("Web Audio API not supported or blocked: ", e);
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playKeyPressSound() {
+      initAudio();
+      if (!audioCtx || STATE.audioMuted) return;
+      
+      const now = audioCtx.currentTime;
+      const profile = SOUND_PROFILES[STATE.audioProfile] || SOUND_PROFILES.clicky;
+      
+      // Keystroke frequency and volume jitter to prevent listener fatigue
+      const clickFreq = profile.clickFreq * (0.85 + Math.random() * 0.25);
+      const thockFreq = profile.thockFreq * (0.85 + Math.random() * 0.25);
+      const noiseGainVal = (0.75 + Math.random() * 0.25) * (STATE.audioProfile === 'clicky' ? 0.9 : STATE.audioProfile === 'thocky' ? 0.5 : 0.4);
+      const thockGainVal = (0.75 + Math.random() * 0.25) * (STATE.audioProfile === 'clicky' ? 0.4 : STATE.audioProfile === 'thocky' ? 0.65 : 0.3);
+
+      // Layer 1 — Click Transient (short sharp noise burst)
+      try {
+        const bufferSize = audioCtx.sampleRate * 0.02; // 20ms
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 8);
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = clickFreq;
+        filter.Q.value = 0.8;
+
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(noiseGainVal, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noise.start(now);
+        noise.stop(now + 0.02);
+      } catch (e) {
+        // Fallback
+      }
+
+      // Layer 2 — Thock Body (the "thock" resonance)
+      try {
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+
+        osc.type = STATE.audioProfile === 'thocky' ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(thockFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(thockFreq * 0.33, now + 0.04); // drops fast
+
+        oscGain.gain.setValueAtTime(thockGainVal, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      } catch (e) {
+        // Fallback
+      }
+
+      // Layer 3 — Key Release Tick (subtle, fires ~80ms after keydown with slight jitter)
+      const releaseJitter = 75 + Math.random() * 15;
+      setTimeout(() => {
+        playReleaseTick(clickFreq * 1.3);
+      }, releaseJitter);
+    }
+
+    function playReleaseTick(freq) {
+      if (!audioCtx || STATE.audioMuted) return;
+      const now = audioCtx.currentTime;
+      
+      try {
+        const bufferSize = audioCtx.sampleRate * 0.008; // 8ms
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 8);
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = freq || 5000;
+        filter.Q.value = 1.0;
+
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.25 * (STATE.audioProfile === 'soft' ? 0.5 : 1.0), now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.008);
+
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noise.start(now);
+        noise.stop(now + 0.008);
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    function playCorrectWordSound() {
+      initAudio();
+      if (!audioCtx || STATE.audioMuted) return;
+      const now = audioCtx.currentTime;
+      
+      try {
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1100, now + 0.08);
+        
+        oscGain.gain.setValueAtTime(0.15, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    function playIncorrectWordSound() {
+      initAudio();
+      if (!audioCtx || STATE.audioMuted) return;
+      const now = audioCtx.currentTime;
+      
+      try {
+        // Low thud
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(90, now);
+        oscGain.gain.setValueAtTime(0.3, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.06);
+
+        // Noise burst
+        const bufferSize = audioCtx.sampleRate * 0.06; // 60ms
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 4);
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 200;
+
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.15, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noise.start(now);
+        noise.stop(now + 0.06);
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    // Two-tone ping for streak milestone
+    function playStreakMilestoneSound() {
+      initAudio();
+      if (!audioCtx || STATE.audioMuted) return;
+      const now = audioCtx.currentTime;
+      
+      try {
+        // Note 1: 660Hz
+        const osc1 = audioCtx.createOscillator();
+        const oscGain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(660, now);
+        oscGain1.gain.setValueAtTime(0.12, now);
+        oscGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc1.connect(oscGain1);
+        oscGain1.connect(masterGain);
+        osc1.start(now);
+        osc1.stop(now + 0.04);
+
+        // Note 2: 880Hz, 40ms later
+        const osc2 = audioCtx.createOscillator();
+        const oscGain2 = audioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, now + 0.04);
+        oscGain2.gain.setValueAtTime(0, now + 0.04);
+        oscGain2.gain.linearRampToValueAtTime(0.12, now + 0.04 + 0.005);
+        oscGain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04 + 0.04);
+        osc2.connect(oscGain2);
+        oscGain2.connect(masterGain);
+        osc2.start(now + 0.04);
+        osc2.stop(now + 0.04 + 0.04);
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    function playTestCompleteSound() {
+      initAudio();
+      if (!audioCtx || STATE.audioMuted) return;
+      const now = audioCtx.currentTime;
+      const notes = [523, 659, 784];
+      
+      try {
+        notes.forEach((freq, idx) => {
+          const timeOffset = idx * 0.03;
+          const osc = audioCtx.createOscillator();
+          const oscGain = audioCtx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + timeOffset);
+          
+          oscGain.gain.setValueAtTime(0, now + timeOffset);
+          oscGain.gain.linearRampToValueAtTime(0.15, now + timeOffset + 0.01);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.4);
+          
+          osc.connect(oscGain);
+          oscGain.connect(masterGain);
+          osc.start(now + timeOffset);
+          osc.stop(now + timeOffset + 0.4);
+        });
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    // Visual feedback ripple emitter
+    function triggerRipple(isCorrect, activeWordEl, inputLength, charElements) {
+      const containerRect = DOM.wordsInner.getBoundingClientRect();
+      let left = 0;
+      let top = 0;
+      
+      if (inputLength > 0 && charElements && charElements[inputLength - 1]) {
+        const charRect = charElements[inputLength - 1].getBoundingClientRect();
+        left = charRect.left + charRect.width / 2 - containerRect.left;
+        top = charRect.top + charRect.height / 2 - containerRect.top;
+      } else {
+        // Fallback to caret position
+        left = STATE.caretLeft || 0;
+        top = (STATE.caretTop || 0) + 14;
+      }
+      
+      const ripple = document.createElement('div');
+      ripple.className = `key-ripple ${isCorrect ? 'correct' : 'error'}`;
+      ripple.style.left = `${left}px`;
+      ripple.style.top = `${top}px`;
+      DOM.wordsInner.appendChild(ripple);
+      
+      setTimeout(() => {
+        ripple.remove();
+      }, 300);
+    }
+
+    // Haptic feedback emitter (safe for mobile)
+    function triggerHaptic(type) {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try {
+          if (type === 'correct-char') {
+            navigator.vibrate(8);
+          } else if (type === 'error') {
+            navigator.vibrate([10, 20, 10]);
+          } else if (type === 'word-complete') {
+            navigator.vibrate(15);
+          }
+        } catch (e) {
+          // Ignore haptic context block
+        }
+      }
+    }
+
     // Shuffle helper (Fisher-Yates)
     function shuffleArray(array) {
       const copy = [...array];
@@ -1214,6 +1716,11 @@
       STATE.numbersMode = safeGetItem('typer_numbers') === 'true';
       STATE.countdownEnabled = safeGetItem('typer_countdown') === 'true';
 
+      // Audio configs
+      STATE.audioVolume = parseFloat(safeGetItem('typer_volume') ?? '0.7');
+      STATE.audioMuted = safeGetItem('typer_muted') === 'true';
+      STATE.audioProfile = safeGetItem('typer_profile') ?? 'clicky';
+
       // Update UI state for menu options
       updateMenuUI();
     }
@@ -1226,6 +1733,11 @@
       safeSetItem('typer_punctuation', STATE.punctuationMode);
       safeSetItem('typer_numbers', STATE.numbersMode);
       safeSetItem('typer_countdown', STATE.countdownEnabled);
+
+      // Audio configs
+      safeSetItem('typer_volume', STATE.audioVolume);
+      safeSetItem('typer_muted', STATE.audioMuted);
+      safeSetItem('typer_profile', STATE.audioProfile);
     }
 
     function applyTheme() {
@@ -1278,6 +1790,30 @@
       DOM.togglePunctuation.classList.toggle('active', STATE.punctuationMode);
       DOM.toggleNumbers.classList.toggle('active', STATE.numbersMode);
       DOM.toggleCountdown.classList.toggle('active', STATE.countdownEnabled);
+
+      // Audio settings UI sync
+      if (DOM.volumeSlider) {
+        DOM.volumeSlider.value = STATE.audioVolume;
+      }
+      
+      if (DOM.audioProfileConfigs) {
+        DOM.audioProfileConfigs.querySelectorAll('.pill-btn').forEach(btn => {
+          if (btn.dataset.profile === STATE.audioProfile) btn.classList.add('active');
+          else btn.classList.remove('active');
+        });
+      }
+
+      if (DOM.toggleMute) {
+        if (STATE.audioMuted) {
+          DOM.muteIconOn.style.display = 'none';
+          DOM.muteIconOff.style.display = 'block';
+          DOM.toggleMute.classList.add('active');
+        } else {
+          DOM.muteIconOn.style.display = 'block';
+          DOM.muteIconOff.style.display = 'none';
+          DOM.toggleMute.classList.remove('active');
+        }
+      }
     }
 
     // Reset whole stats and setup new words
@@ -1286,6 +1822,13 @@
       if (STATE.timerIntervalId) {
         clearInterval(STATE.timerIntervalId);
         STATE.timerIntervalId = null;
+      }
+      if (STATE.idleTimeoutId) {
+        clearTimeout(STATE.idleTimeoutId);
+        STATE.idleTimeoutId = null;
+      }
+      if (DOM.caret) {
+        DOM.caret.classList.remove('idle-pulsing');
       }
 
       // Reset values
@@ -1401,6 +1944,15 @@
         clearInterval(STATE.timerIntervalId);
         STATE.timerIntervalId = null;
       }
+      if (STATE.idleTimeoutId) {
+        clearTimeout(STATE.idleTimeoutId);
+        STATE.idleTimeoutId = null;
+      }
+      if (DOM.caret) {
+        DOM.caret.classList.remove('idle-pulsing');
+      }
+
+      playTestCompleteSound();
 
       DOM.menuSection.style.opacity = '1';
       DOM.menuSection.style.pointerEvents = 'all';
@@ -1527,6 +2079,19 @@
       // Detect Caps Lock change
       checkCapsLock(e);
 
+      // Reset cursor idle pulse timer on activity
+      clearTimeout(STATE.idleTimeoutId);
+      if (DOM.caret) {
+        DOM.caret.classList.remove('idle-pulsing');
+      }
+      if (STATE.isTestRunning) {
+        STATE.idleTimeoutId = setTimeout(() => {
+          if (DOM.caret) {
+            DOM.caret.classList.add('idle-pulsing');
+          }
+        }, 2000);
+      }
+
       // Check if spacebar was submitted
       if (inputVal.endsWith(' ')) {
         const trimmedVal = inputVal.trim();
@@ -1543,6 +2108,36 @@
         return;
       }
 
+      // Handle audio, haptics, and ripple feedback per keystroke
+      if (inputVal.length !== prevInputVal.length) {
+        playKeyPressSound();
+        
+        if (inputVal.length > prevInputVal.length) {
+          // A character was typed
+          const lastInputIdx = inputVal.length - 1;
+          const targetChar = activeWordText[lastInputIdx];
+          const isCorrectChar = targetChar && inputVal[lastInputIdx] === targetChar && lastInputIdx < activeWordText.length;
+          
+          triggerRipple(isCorrectChar, activeWordEl, inputVal.length, charElements);
+          triggerHaptic(isCorrectChar ? 'correct-char' : 'error');
+          
+          if (!isCorrectChar) {
+            // Trigger micro shake immediately
+            if (activeWordEl) {
+              activeWordEl.classList.remove('shaking');
+              void activeWordEl.offsetWidth; // reflow
+              activeWordEl.classList.add('shaking');
+              setTimeout(() => {
+                activeWordEl.classList.remove('shaking');
+              }, 150);
+            }
+            
+            // Increment incorrect stats
+            STATE.incorrectChars++;
+          }
+        }
+      }
+
       // Dynamic character coloring
       // Clean up previous overshoots
       const overshootElements = activeWordEl.querySelectorAll('.char.overshoot');
@@ -1555,7 +2150,16 @@
         const charEl = charElements[i];
         if (i < inputVal.length) {
           if (inputVal[i] === activeWordText[i]) {
+            const wasCorrect = charEl.classList.contains('correct');
             charEl.className = 'char correct';
+            
+            // Character Pop transform
+            if (!wasCorrect && i === inputVal.length - 1 && inputVal.length > prevInputVal.length) {
+              charEl.classList.add('pop');
+              setTimeout(() => {
+                charEl.classList.remove('pop');
+              }, 120);
+            }
           } else {
             charEl.className = 'char incorrect';
             isCurrentTypingCorrect = false;
@@ -1573,21 +2177,6 @@
           extraCharSpan.className = 'char incorrect overshoot';
           extraCharSpan.textContent = inputVal[i];
           activeWordEl.appendChild(extraCharSpan);
-        }
-      }
-
-      // Micro-interaction: Shake word container briefly on incorrect keystroke input
-      if (!isCurrentTypingCorrect && inputVal.length > 0) {
-        // Only trigger shake if last typed char is wrong
-        const lastInputIndex = inputVal.length - 1;
-        const targetChar = activeWordText[lastInputIndex];
-        if (!targetChar || inputVal[lastInputIndex] !== targetChar) {
-          activeWordEl.classList.remove('shaking');
-          void activeWordEl.offsetWidth; // trigger layout reflow
-          activeWordEl.classList.add('shaking');
-          
-          // Increment incorrect stats
-          STATE.incorrectChars++;
         }
       }
 
@@ -1654,16 +2243,52 @@
     // Submit a word to the completed pile
     function commitWord(typedWord, targetWord, wordEl) {
       if (typedWord === targetWord) {
-        wordEl.className = 'word correct';
+        if (wordEl) {
+          wordEl.className = 'word correct flash-green';
+          setTimeout(() => {
+            wordEl.classList.remove('flash-green');
+          }, 250);
+        }
         STATE.wordsCorrect++;
         STATE.currentStreak++;
         if (STATE.currentStreak > STATE.bestStreak) {
           STATE.bestStreak = STATE.currentStreak;
         }
+
+        playCorrectWordSound();
+        triggerHaptic('word-complete');
+
+        // Streak animations & milestone sounds
+        if (DOM.streakChipContainer) {
+          DOM.streakChipContainer.classList.remove('streak-pop');
+          void DOM.streakChipContainer.offsetWidth; // reflow
+          DOM.streakChipContainer.classList.add('streak-pop');
+          setTimeout(() => {
+            DOM.streakChipContainer.classList.remove('streak-pop');
+          }, 150);
+
+          if (STATE.currentStreak % 10 === 0 && STATE.currentStreak > 0) {
+            playStreakMilestoneSound();
+          }
+
+          if (STATE.currentStreak === 10 || STATE.currentStreak === 25 || STATE.currentStreak === 50) {
+            DOM.streakChipContainer.classList.remove('streak-glow');
+            void DOM.streakChipContainer.offsetWidth; // reflow
+            DOM.streakChipContainer.classList.add('streak-glow');
+            setTimeout(() => {
+              DOM.streakChipContainer.classList.remove('streak-glow');
+            }, 500);
+          }
+        }
       } else {
-        wordEl.className = 'word incorrect';
+        if (wordEl) {
+          wordEl.className = 'word incorrect';
+        }
         STATE.wordsIncorrect++;
         STATE.currentStreak = 0;
+        
+        playIncorrectWordSound();
+        triggerHaptic('error');
       }
 
       // Account for spaces in total characters
@@ -1790,6 +2415,9 @@
           targetTop = overshootRect.top - containerRect.top;
         }
       }
+
+      STATE.caretLeft = targetLeft;
+      STATE.caretTop = targetTop;
 
       // Disable caret transition on vertical wrap shifts to prevent diagonal sliding
       const currentCaretTop = parseFloat(DOM.caret.style.top) || 0;
@@ -2096,6 +2724,59 @@
         resetTestState();
       });
       
+      // Lazy audio initialization on key interactions
+      window.addEventListener('keydown', () => {
+        initAudio();
+      });
+      document.addEventListener('click', () => {
+        initAudio();
+      });
+
+      // Sound profile configs
+      if (DOM.audioProfileConfigs) {
+        DOM.audioProfileConfigs.querySelectorAll('.pill-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            STATE.audioProfile = btn.dataset.profile;
+            saveSettings();
+            updateMenuUI();
+            DOM.hiddenInput.focus();
+          });
+        });
+      }
+
+      // Mute control toggle
+      if (DOM.toggleMute) {
+        DOM.toggleMute.addEventListener('click', (e) => {
+          e.stopPropagation();
+          STATE.audioMuted = !STATE.audioMuted;
+          if (masterGain && audioCtx) {
+            masterGain.gain.setValueAtTime(STATE.audioMuted ? 0 : STATE.audioVolume, audioCtx.currentTime);
+          }
+          saveSettings();
+          updateMenuUI();
+          DOM.hiddenInput.focus();
+        });
+      }
+
+      // Volume slider control
+      if (DOM.volumeSlider) {
+        DOM.volumeSlider.addEventListener('input', (e) => {
+          e.stopPropagation();
+          STATE.audioVolume = parseFloat(DOM.volumeSlider.value);
+          if (STATE.audioVolume > 0 && STATE.audioMuted) {
+            STATE.audioMuted = false;
+          } else if (STATE.audioVolume === 0 && !STATE.audioMuted) {
+            STATE.audioMuted = true;
+          }
+          if (masterGain && audioCtx) {
+            masterGain.gain.setValueAtTime(STATE.audioMuted ? 0 : STATE.audioVolume, audioCtx.currentTime);
+          }
+          saveSettings();
+          updateMenuUI();
+        });
+      }
+
       // Auto-resize canvas event
       window.addEventListener('resize', () => {
         if (STATE.isFinished) {
